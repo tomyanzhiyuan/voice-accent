@@ -1,0 +1,238 @@
+# Singaporean-Accent TTS MVP - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# ============================================================================
+# CORE MACHINE LEARNING AND AI FRAMEWORKS
+# ============================================================================
+
+# PyTorch ecosystem (with CUDA support detection)
+torch>=2.0.0,<3.0.0
+torchaudio>=2.0.0,<3.0.0
+torchvision>=0.15.0,<1.0.0
+
+# Transformers and model utilities
+transformers>=4.30.0,<5.0.0
+accelerate>=0.20.0,<1.0.0
+safetensors>=0.3.0,<1.0.0
+
+# ============================================================================
+# TTS ENGINES AND VOICE PROCESSING
+# ============================================================================
+
+# Coqui TTS (XTTS v2 engine)
+TTS>=0.22.0,<1.0.0
+
+# Tortoise TTS (fallback engine)
+tortoise-tts>=2.8.0,<3.0.0
+
+# OpenAI Whisper for transcription
+openai-whisper>=20231117,<20250101
+
+# ============================================================================
+# AUDIO PROCESSING AND ANALYSIS
+# ============================================================================
+
+# Core audio processing
+librosa>=0.10.0,<1.0.0
+soundfile>=0.12.0,<1.0.0
+pydub>=0.25.0,<1.0.0
+scipy>=1.10.0,<2.0.0
+
+# Audio format handling and conversion
+ffmpeg-python>=0.2.0,<1.0.0
+
+# Audio quality and loudness analysis
+pyloudnorm>=0.1.0,<1.0.0
+pyworld>=0.3.0,<1.0.0
+
+# ============================================================================
+# NUMERICAL COMPUTING AND DATA PROCESSING
+# ============================================================================
+
+# Core numerical libraries
+numpy>=1.24.0,<2.0.0
+pandas>=2.0.0,<3.0.0
+
+# Scientific computing
+scipy>=1.10.0,<2.0.0
+
+# Performance optimization
+numba>=0.57.0,<1.0.0
+
+# ============================================================================
+# WEB INTERFACE AND USER INTERACTION
+# ============================================================================
+
+# Gradio web interface
+gradio>=4.0.0,<5.0.0
+
+# Additional web utilities
+fastapi>=0.100.0,<1.0.0
+uvicorn>=0.23.0,<1.0.0
+
+# ============================================================================
+# CONFIGURATION AND ENVIRONMENT MANAGEMENT
+# ============================================================================
+
+# Environment variables
+python-dotenv>=1.0.0,<2.0.0
+
+# Configuration file handling
+pyyaml>=6.0,<7.0
+toml>=0.10.0,<1.0.0
+
+# Argument parsing
+click>=8.0.0,<9.0.0
+
+# ============================================================================
+# LOGGING AND MONITORING
+# ============================================================================
+
+# Enhanced logging
+loguru>=0.7.0,<1.0.0
+
+# Progress bars and monitoring
+tqdm>=4.65.0,<5.0.0
+
+# Memory profiling
+psutil>=5.9.0,<6.0.0
+
+# ============================================================================
+# FILE HANDLING AND UTILITIES
+# ============================================================================
+
+# Path handling
+pathlib2>=2.3.0,<3.0.0; python_version < "3.4"
+
+# File format detection
+python-magic>=0.4.0,<1.0.0
+
+# Archive handling
+patool>=1.12.0,<2.0.0
+
+# ============================================================================
+# DATA VALIDATION AND SERIALIZATION
+# ============================================================================
+
+# Data validation
+pydantic>=2.0.0,<3.0.0
+
+# JSON handling
+orjson>=3.9.0,<4.0.0
+
+# ============================================================================
+# TESTING AND DEVELOPMENT TOOLS
+# ============================================================================
+
+# Testing framework
+pytest>=7.4.0,<8.0.0
+pytest-cov>=4.1.0,<5.0.0
+pytest-asyncio>=0.21.0,<1.0.0
+
+# Code quality
+black>=23.0.0,<24.0.0
+flake8>=6.0.0,<7.0.0
+mypy>=1.5.0,<2.0.0
+
+# Pre-commit hooks
+pre-commit>=3.3.0,<4.0.0
+
+# ============================================================================
+# OPTIONAL DEPENDENCIES FOR ENHANCED FEATURES
+# ============================================================================
+
+# Jupyter notebook support (optional)
+jupyter>=1.0.0,<2.0.0
+ipykernel>=6.25.0,<7.0.0
+matplotlib>=3.7.0,<4.0.0
+seaborn>=0.12.0,<1.0.0
+
+# Advanced audio visualization (optional)
+librosa[display]>=0.10.0,<1.0.0
+
+# GPU acceleration utilities (optional)
+nvidia-ml-py>=12.0.0,<13.0.0; sys_platform == "linux"
+
+# ============================================================================
+# PLATFORM-SPECIFIC DEPENDENCIES
+# ============================================================================
+
+# macOS specific
+pyobjc-core>=9.2; sys_platform == "darwin"
+pyobjc-framework-AVFoundation>=9.2; sys_platform == "darwin"
+
+# Windows specific
+pywin32>=306; sys_platform == "win32"
+
+# Linux specific
+python-dev-tools>=2023.1; sys_platform == "linux"
+
+# ============================================================================
+# VERSION CONSTRAINTS AND COMPATIBILITY
+# ============================================================================
+
+# Ensure Python version compatibility
+# This project requires Python 3.10+
+
+# Pin critical dependencies to avoid breaking changes
+# torch: Major version locked to 2.x for stability
+# transformers: Version 4.x for model compatibility
+# gradio: Version 4.x for UI stability
+# TTS: Latest stable version with XTTS v2 support
+
+# ============================================================================
+# INSTALLATION NOTES
+# ============================================================================
+
+# For GPU support (CUDA):
+# pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu118
+
+# For Apple Silicon (MPS):
+# pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+# For CPU-only installation:
+# pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+# System dependencies required:
+# - FFmpeg (for audio processing)
+# - Git LFS (for large model files, optional)
+# - Python 3.10 or 3.11 (recommended)
+
+# ============================================================================
+# TROUBLESHOOTING COMMON ISSUES
+# ============================================================================
+
+# If you encounter installation issues:
+
+# 1. PyTorch installation problems:
+#    - Use the official PyTorch installation guide
+#    - Ensure CUDA version compatibility
+#    - Try CPU-only version first
+
+# 2. Audio processing issues:
+#    - Install FFmpeg system-wide
+#    - Check audio codec support
+#    - Verify file permissions
+
+# 3. Memory issues:
+#    - Use CPU-only mode for testing
+#    - Reduce batch sizes
+#    - Enable low-memory mode
+
+# 4. Model download failures:
+#    - Check internet connection
+#    - Verify disk space (5-10GB needed)
+#    - Try manual model download
+
+# ============================================================================
+# DEVELOPMENT DEPENDENCIES (requirements-dev.txt)
+# ============================================================================
+
+# For development, also install:
+# pip install -r requirements-dev.txt
+
+# Development-specific packages:
+# - Additional testing tools
+# - Documentation generators
+# - Code analysis tools
+# - Profiling utilities

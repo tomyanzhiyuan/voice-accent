@@ -1,0 +1,458 @@
+# Singaporean-Accent TTS MVP - Cline Development Rules
+
+## 🎯 Project Overview
+This project builds a minimal viable product for generating English speech with a Singaporean accent using XTTS v2 (primary) and Tortoise-TTS (fallback), with a Gradio UI and evaluation framework. The system uses few-shot voice cloning from reference audio clips to achieve accent authenticity.
+
+## 📁 File Organization
+
+### Directory Structure
+```
+accent-tts/
+├── src/
+│   ├── data/
+│   │   ├── __init__.py
+│   │   ├── ingest.py          # Audio validation & copying to data/raw
+│   │   ├── prepare.py         # Resampling, normalization, segmentation
+│   │   └── transcribe.py      # Whisper transcription pipeline
+│   ├── tts/
+│   │   ├── __init__.py
+│   │   ├── xtts_infer.py      # XTTS v2 inference engine (primary)
+│   │   └── tortoise_infer.py  # Tortoise-TTS fallback system
+│   ├── ui/
+│   │   ├── __init__.py
+│   │   └── app.py             # Gradio web interface
+│   └── eval/
+│       └── checklist.md       # Evaluation rubric and phoneme list
+├── data/                      # Gitignored - never commit audio files
+│   ├── raw/
+│   │   └── refs/             # Reference Singaporean-accent clips
+│   └── processed/
+│       ├── segments/         # Processed audio segments (16kHz mono)
+│       └── transcripts/      # Generated transcriptions (.jsonl)
+├── outputs/                   # Generated audio files
+├── config/                    # Configuration files
+├── tests/                     # Unit and integration tests
+├── docs/                      # Additional documentation
+├── scripts/                   # Utility and setup scripts
+├── notebooks/                 # Optional exploration (Jupyter)
+├── requirements.txt           # Python dependencies
+├── Makefile                   # Automation commands
+├── .env.example              # Environment variable template
+├── .gitignore                # Comprehensive exclusions
+└── README.md                 # Setup and usage documentation
+```
+
+### File Naming Conventions
+- Python files: `snake_case.py`
+- Configuration files: `lowercase.json`, `lowercase.yaml`
+- Documentation: `UPPERCASE.md` for main docs, `lowercase.md` for specific docs
+- Audio files: `descriptive_name_16khz.wav` (processed), original names preserved in raw/
+
+## 🐍 Python Code Standards
+
+### Style Guidelines
+- Follow PEP 8 strictly with Black formatter (88 character line limit)
+- Use type hints for all function parameters and return values
+- Use docstrings for all classes and functions (Google style)
+- Import order: standard library, third-party, local imports
+- Use specific exception types, never bare `except:`
+
+### Code Structure Template
+```python
+"""Module docstring describing TTS pipeline component."""
+
+import os
+import sys
+from pathlib import Path
+from typing import Dict, List, Optional, Union, Tuple
+
+import numpy as np
+import torch
+import librosa
+import soundfile as sf
+from TTS.api import TTS
+
+from .base import BaseTTSEngine
+from ..utils.audio import normalize_audio, validate_audio_file
+
+
+class XTTSInferenceEngine(BaseTTSEngine):
+    """XTTS v2 inference engine for Singaporean accent generation.
+    
+    Uses few-shot voice cloning from reference audio clips to generate
+    speech with authentic Singaporean accent characteristics including
+    phonetic substitutions and prosodic patterns.
+    """
+    
+    def __init__(self, model_path: str, device: str = "auto") -> None:
+        """Initialize XTTS inference engine.
+        
+        Args:
+            model_path: Path to XTTS model files
+            device: Target device ("cuda", "cpu", or "auto" for detection)
+            
+        Raises:
+            FileNotFoundError: If model files don't exist
+            RuntimeError: If model loading fails
+        """
+        self.device = self._detect_device(device)
+        self.model = self._load_model(model_path)
+        self.speaker_embedding = None
+    
+    def build_speaker_embedding(
+        self, 
+        reference_clips: List[Path], 
+        min_clips: int = 3
+    ) -> np.ndarray:
+        """Build speaker embedding from Singaporean accent reference clips.
+        
+        Analyzes 3-10 reference audio clips to extract voice characteristics
+        including accent patterns, prosody, and rhythm for voice cloning.
+        
+        Args:
+            reference_clips: List of paths to reference audio files
+            min_clips: Minimum number of clips required for stable embedding
+            
+        Returns:
+            Speaker embedding vector for voice cloning
+            
+        Raises:
+            ValueError: If insufficient clips or invalid audio format
+            AudioProcessingError: If embedding extraction fails
+        """
+        if len(reference_clips) < min_clips:
+            raise ValueError(f"Need at least {min_clips} clips, got {len(reference_clips)}")
+        
+        # Implementation details...
+        pass
+    
+    def generate_speech(
+        self, 
+        text: str, 
+        temperature: float = 0.7,
+        seed: Optional[int] = None
+    ) -> Tuple[np.ndarray, int]:
+        """Generate Singaporean-accented speech from text.
+        
+        Args:
+            text: Input text to synthesize
+            temperature: Prosody variation control (0.1-1.0)
+            seed: Random seed for deterministic generation
+            
+        Returns:
+            Tuple of (audio_array, sample_rate)
+            
+        Raises:
+            RuntimeError: If generation fails
+            ValueError: If speaker embedding not built
+        """
+        pass
+```
+
+### Error Handling Standards
+- Use specific exception types with descriptive messages
+- Log errors with appropriate levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+- Implement graceful fallbacks (XTTS → Tortoise → Error)
+- Return meaningful error responses in API endpoints
+
+### Configuration Management
+- Store paths in environment variables: `ACCENT_TTS_DATA_DIR`, `ACCENT_TTS_MODEL_DIR`
+- Use `config/settings.json` for hyperparameters and model settings
+- Validate configuration on startup with clear error messages
+- Provide sensible defaults for all optional settings
+
+## 🎵 Audio Processing Standards
+
+### Audio Specifications
+- **Sample Rate**: 16kHz (standard for TTS models)
+- **Format**: Mono WAV files for processing
+- **Bit Depth**: 16-bit for storage, 32-bit float for processing
+- **Loudness**: Normalized to -23 LUFS (broadcast standard)
+- **Segment Length**: ≤10 seconds for optimal TTS performance
+
+### Audio Pipeline Requirements
+```python
+def process_audio_file(input_path: Path, output_path: Path) -> Dict[str, Any]:
+    """Process raw audio for TTS training/inference.
+    
+    Pipeline: Load → Resample → Normalize → Segment → Validate
+    
+    Args:
+        input_path: Raw audio file (WAV/MP3/OGG)
+        output_path: Processed output directory
+        
+    Returns:
+        Processing metadata including duration, segments, quality metrics
+    """
+    pass
+```
+
+### Quality Validation
+- Check for clipping, silence, background noise
+- Validate duration (30s-2min per clip for good quality)
+- Ensure consistent volume levels across clips
+- Detect and flag low-quality segments
+
+## 🤖 TTS Engine Standards
+
+### Model Architecture Decisions
+- **Primary**: XTTS v2 (faster inference, good few-shot performance)
+- **Fallback**: Tortoise-TTS (higher quality, slower generation)
+- **Device Strategy**: Auto-detect CUDA/MPS, graceful CPU fallback
+- **Memory Management**: Lazy loading, model unloading for resource efficiency
+
+### Voice Cloning Pipeline
+```python
+class BaseTTSEngine:
+    """Abstract base class for TTS engines."""
+    
+    def build_speaker_embedding(self, clips: List[Path]) -> np.ndarray:
+        """Extract speaker characteristics from reference clips."""
+        raise NotImplementedError
+    
+    def generate_speech(self, text: str, **kwargs) -> Tuple[np.ndarray, int]:
+        """Generate speech with cloned voice."""
+        raise NotImplementedError
+    
+    def get_model_info(self) -> Dict[str, Any]:
+        """Return model metadata and capabilities."""
+        raise NotImplementedError
+```
+
+### Performance Targets
+- **XTTS Generation**: <5 seconds for 10-word sentence on CPU
+- **Tortoise Generation**: <30 seconds for 10-word sentence on CPU
+- **GPU Acceleration**: 3-5x speedup when available
+- **Memory Usage**: <2GB RAM for XTTS, <4GB for Tortoise
+- **Audio Quality**: 16kHz, clear speech, minimal artifacts
+
+## 🌐 Gradio UI Standards
+
+### Interface Design Principles
+- **Simplicity**: Clear, intuitive controls for non-technical users
+- **Responsiveness**: Works on desktop and mobile browsers
+- **Accessibility**: Proper labels, keyboard navigation, screen reader support
+- **Error Handling**: Clear error messages and recovery suggestions
+
+### UI Component Structure
+```python
+def create_gradio_interface() -> gr.Interface:
+    """Create Gradio web interface for TTS generation.
+    
+    Components:
+    - Reference folder picker (data/processed/segments/)
+    - Text input with Singlish example sentences
+    - Model selector (XTTS/Tortoise)
+    - Generation parameters (temperature, seed)
+    - Audio output player with download
+    - Generation log and error display
+    """
+    pass
+```
+
+### Pre-filled Test Sentences
+```python
+SINGLISH_EXAMPLES = [
+    "The weather today is quite hot, lah.",
+    "Can you help me with this thing or not?",
+    "I think we should go there first, then see how.",
+    "Wah, this food very nice sia!",
+    "Don't worry, everything will be okay one.",
+    "You want to go shopping with me anot?",
+]
+```
+
+## 📊 Evaluation Framework Standards
+
+### Phonetic Accent Markers
+- **Consonant Substitutions**: "th→t/d" (thing→ting, that→dat)
+- **Vowel Shifts**: TRAP-BATH split, monophthongization
+- **Final Consonant Deletion**: "and→an", "want→wan"
+- **Syllable-Timed Rhythm**: Equal stress on syllables vs stress-timed English
+
+### Evaluation Checklist Template
+```markdown
+## Singaporean Accent Authenticity Checklist
+
+### Phonetic Features (1-5 scale)
+- [ ] TH-stopping: "th" → "t/d" substitution present
+- [ ] Final consonant deletion: Natural reduction patterns
+- [ ] Vowel system: Singaporean English vowel inventory
+- [ ] Rhythm: Syllable-timed vs stress-timed patterns
+
+### Prosodic Features (1-5 scale)  
+- [ ] Intonation: Rising final intonation patterns
+- [ ] Stress patterns: Even syllable prominence
+- [ ] Speech rate: Natural conversational pace
+- [ ] Pause patterns: Appropriate phrase boundaries
+
+### Overall Quality (1-5 scale)
+- [ ] Naturalness: Sounds like native Singaporean speaker
+- [ ] Intelligibility: Clear and understandable
+- [ ] Consistency: Stable accent throughout utterance
+- [ ] Authenticity: Recognizable as Singaporean accent
+```
+
+## 🔒 Security & Privacy Standards
+
+### Data Protection
+- **Local Processing**: All TTS generation happens locally, no external APIs
+- **Audio Privacy**: Never log or store user-generated audio without consent
+- **Reference Audio**: Store in gitignored directories with proper permissions
+- **Model Security**: Validate model files, check for tampering
+
+### Environment Variables
+```bash
+# .env.example
+ACCENT_TTS_DATA_DIR=./data
+ACCENT_TTS_MODEL_DIR=./models
+ACCENT_TTS_OUTPUT_DIR=./outputs
+ACCENT_TTS_LOG_LEVEL=INFO
+ACCENT_TTS_DEVICE=auto
+ACCENT_TTS_MAX_AUDIO_LENGTH=300  # seconds
+```
+
+### File Permissions
+- Audio files: 600 (owner read/write only)
+- Model files: 644 (owner write, group/other read)
+- Configuration: 644 (readable for debugging)
+- Logs: 640 (owner write, group read)
+
+## 🧪 Testing Standards
+
+### Test Organization
+- Unit tests: `tests/unit/test_module_name.py`
+- Integration tests: `tests/integration/test_pipeline_name.py`
+- Audio tests: `tests/audio/` with sample files
+- Use pytest with fixtures for audio data
+
+### Test Categories
+```python
+def test_audio_processing_pipeline():
+    """Test complete audio processing from raw to segments."""
+    pass
+
+def test_xtts_inference_with_reference_clips():
+    """Test XTTS generation with Singaporean accent clips."""
+    pass
+
+def test_gradio_interface_functionality():
+    """Test UI components and user interactions."""
+    pass
+
+def test_accent_evaluation_metrics():
+    """Test phonetic and prosodic feature detection."""
+    pass
+```
+
+### Audio Test Data
+- Include small sample clips for automated testing
+- Use synthetic/public domain audio to avoid copyright issues
+- Test edge cases: silence, noise, different formats
+- Validate against known good outputs
+
+## 🔄 Git Workflow & Automation
+
+### Repository Security
+- Comprehensive `.gitignore` excluding all audio files and models
+- Never commit API keys, personal audio, or sensitive data
+- Use Git LFS for large model files (>100MB) if needed
+- Regular security audits of committed files
+
+### Commit Message Format
+```
+feat(xtts): add speaker embedding generation
+fix(audio): resolve segmentation boundary detection
+docs(readme): update installation instructions for macOS
+test(integration): add end-to-end TTS pipeline tests
+refactor(ui): improve Gradio interface responsiveness
+```
+
+### Makefile Automation
+```makefile
+.PHONY: setup prepare ui demo clean test lint
+
+setup:          # Create venv, install deps, check ffmpeg
+prepare:        # Run ingest→prepare→transcribe pipeline  
+ui:             # Launch Gradio interface on localhost:7860
+demo:           # Generate demo.wav with sample Singlish text
+clean:          # Remove processed files and outputs
+test:           # Run pytest suite with coverage
+lint:           # Run black, flake8, mypy checks
+```
+
+## 📈 Development Phases & Milestones
+
+### Phase 1: Foundation ✅ CURRENT
+- [x] Project structure and documentation
+- [x] Environment setup and dependency management
+- [ ] Audio processing pipeline (ingest→prepare→transcribe)
+- [ ] Basic XTTS integration and testing
+
+### Phase 2: Core TTS Implementation
+- [ ] XTTS v2 inference engine with speaker embedding
+- [ ] Tortoise-TTS fallback system
+- [ ] Voice cloning pipeline with reference clips
+- [ ] Audio quality validation and metrics
+
+### Phase 3: User Interface & Experience
+- [ ] Gradio web interface with all controls
+- [ ] Pre-filled Singlish example sentences
+- [ ] Real-time generation progress and error handling
+- [ ] Audio playback and download functionality
+
+### Phase 4: Evaluation & Polish
+- [ ] Comprehensive accent evaluation framework
+- [ ] Automated testing suite with audio samples
+- [ ] Performance optimization and GPU acceleration
+- [ ] Documentation and deployment guides
+
+## 🎯 Success Criteria
+
+### Technical Requirements
+- `make setup` completes without errors on macOS
+- `make ui` launches functional Gradio interface
+- `make demo` generates recognizable Singaporean-accented speech
+- End-to-end pipeline processes reference clips to speech output
+- Both XTTS and Tortoise engines produce quality results
+
+### Quality Benchmarks
+- Generated speech exhibits clear Singaporean accent markers
+- Audio quality suitable for conversational applications
+- Processing time reasonable for interactive use (<30s per sentence)
+- System handles various input text lengths and complexity
+- Evaluation framework provides meaningful accent assessment
+
+### User Experience Goals
+- Non-technical users can generate accented speech easily
+- Clear error messages and recovery guidance
+- Responsive interface works across devices and browsers
+- Comprehensive documentation enables quick setup
+- Example sentences demonstrate system capabilities effectively
+
+## 🔧 Development Environment
+
+### Python Environment
+- Python 3.10+ (tested on 3.11)
+- Use `venv` for virtual environment management
+- Install PyTorch with CUDA support if available
+- Pin dependency versions for reproducibility
+
+### System Dependencies
+- FFmpeg for audio processing and format conversion
+- Git LFS for large model files (if needed)
+- Sufficient disk space for models and audio data (5-10GB)
+- GPU recommended but not required (CPU fallback available)
+
+### IDE Configuration
+- Use type checking (mypy) and formatting (black)
+- Configure pytest for test discovery and coverage
+- Set up debugging for audio processing pipelines
+- Enable linting for code quality maintenance
+
+## 📞 Contact & Maintenance
+- Owner: Tom Yan
+- Email: zhiyuanyan@rochester.edu  
+- GitHub: tomyanzhiyuan
+- Project: Singaporean-Accent TTS MVP
+- Last Updated: September 2024

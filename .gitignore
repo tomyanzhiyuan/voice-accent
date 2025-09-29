@@ -1,0 +1,472 @@
+# Singaporean-Accent TTS MVP - Git Ignore Rules
+
+# ============================================================================
+# CRITICAL: NEVER COMMIT AUDIO FILES OR PERSONAL DATA
+# ============================================================================
+
+# Audio files and data directories
+data/
+*.wav
+*.mp3
+*.ogg
+*.flac
+*.m4a
+*.aac
+*.wma
+*.aiff
+*.au
+
+# Generated outputs
+outputs/
+generated/
+demos/
+*.generated.wav
+*_output.wav
+*_demo.wav
+
+# Model files and weights (use Git LFS if needed)
+models/
+*.pth
+*.pt
+*.bin
+*.safetensors
+*.ckpt
+*.model
+*.pkl
+*.pickle
+
+# ============================================================================
+# PYTHON ENVIRONMENT
+# ============================================================================
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env/
+.ENV/
+accent-tts-env/
+accent_tts_env/
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# ============================================================================
+# ENVIRONMENT VARIABLES AND SECRETS
+# ============================================================================
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+*.env
+
+# API keys and secrets
+secrets/
+credentials/
+keys/
+*.key
+*.pem
+*.p12
+*.pfx
+api_keys.txt
+secrets.json
+credentials.json
+
+# Configuration with sensitive data
+config/local.json
+config/production.json
+config/secrets.yaml
+local_config.py
+private_config.py
+
+# ============================================================================
+# LOGS AND TEMPORARY FILES
+# ============================================================================
+
+# Log files
+logs/
+*.log
+*.log.*
+log/
+*.out
+*.err
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.temp/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Cache directories
+.cache/
+cache/
+.pytest_cache/
+.mypy_cache/
+
+# ============================================================================
+# OPERATING SYSTEM FILES
+# ============================================================================
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.AppleDouble
+.LSOverride
+Icon?
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ============================================================================
+# IDE AND EDITOR FILES
+# ============================================================================
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Atom
+.atom/
+
+# ============================================================================
+# MACHINE LEARNING AND AI SPECIFIC
+# ============================================================================
+
+# TensorBoard logs
+runs/
+tensorboard/
+tb_logs/
+
+# Weights & Biases
+wandb/
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# Hugging Face cache
+.cache/huggingface/
+transformers_cache/
+
+# PyTorch
+lightning_logs/
+
+# ONNX models
+*.onnx
+
+# TensorFlow
+*.pb
+saved_model/
+
+# ============================================================================
+# AUDIO PROCESSING SPECIFIC
+# ============================================================================
+
+# FFmpeg temporary files
+*.ffmpeg
+*.temp.wav
+*.temp.mp3
+
+# Audio analysis cache
+.librosa_cache/
+.audio_cache/
+
+# Spectrograms and visualizations
+spectrograms/
+*.png
+*.jpg
+*.jpeg
+*.svg
+plots/
+figures/
+
+# Audio processing temporary
+segments/
+chunks/
+processed_audio/
+normalized/
+resampled/
+
+# ============================================================================
+# TTS MODEL SPECIFIC
+# ============================================================================
+
+# XTTS model cache
+.xtts_cache/
+xtts_models/
+
+# Tortoise TTS cache
+.tortoise_cache/
+tortoise_models/
+
+# Coqui TTS
+.coqui/
+tts_models/
+
+# Speaker embeddings
+embeddings/
+speaker_profiles/
+voice_profiles/
+
+# Generated voice samples
+samples/
+voice_samples/
+test_outputs/
+
+# ============================================================================
+# GRADIO AND WEB INTERFACE
+# ============================================================================
+
+# Gradio cache
+gradio_cached_examples/
+.gradio/
+
+# Flask/FastAPI
+instance/
+.webassets-cache
+
+# Static files
+static/uploads/
+media/
+
+# ============================================================================
+# DOCUMENTATION AND REPORTS
+# ============================================================================
+
+# Generated documentation
+docs/_build/
+docs/build/
+site/
+
+# LaTeX
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.toc
+
+# ============================================================================
+# BACKUP AND ARCHIVE FILES
+# ============================================================================
+
+# Backup files
+*.bak
+*.backup
+*.old
+*_backup
+*_old
+
+# Archive files
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# ============================================================================
+# CUSTOM PROJECT EXCLUSIONS
+# ============================================================================
+
+# Custom data directories (add as needed)
+raw_data/
+training_data/
+validation_data/
+test_data/
+
+# Custom output directories
+results/
+experiments/
+analysis/
+
+# Custom cache directories
+.custom_cache/
+project_cache/
+
+# Development and testing
+dev/
+development/
+sandbox/
+playground/
+
+# Documentation drafts
+drafts/
+notes/
+TODO.md
+NOTES.md
+
+# ============================================================================
+# SECURITY REMINDERS
+# ============================================================================
+
+# NEVER COMMIT:
+# - Personal audio recordings
+# - API keys or tokens
+# - Database credentials
+# - Private configuration files
+# - Large model files (use Git LFS)
+# - Temporary or cache files
+# - User-generated content
+# - Sensitive personal information
+
+# ALWAYS VERIFY before committing:
+# git status
+# git diff --cached
+# Check for sensitive data patterns
