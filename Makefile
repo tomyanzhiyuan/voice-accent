@@ -138,34 +138,27 @@ prepare: ## Run complete data processing pipeline (ingest→prepare→transcribe
 	@echo "✅ Data processing complete"
 
 .PHONY: ingest
-ingest: ## Copy and validate audio files from data/raw to processed
-	@echo "📥 Ingesting audio files..."
-	@$(VENV_ACTIVATE) && $(VENV_PYTHON) -m $(SRC_DIR).data.ingest \
-		--input $(DATA_DIR)/raw/refs \
-		--output $(DATA_DIR)/processed/segments \
-		--validate
-	@echo "✅ Audio ingestion complete"
+ingest: ## Copy and validate audio files from data/raw to processed (recursive)
+	@echo "📥 Ingesting audio files recursively from $(DATA_DIR)/raw/..."
+	@echo "🔍 Searching for audio files in subdirectories..."
+	@find $(DATA_DIR)/raw -name "*.wav" -o -name "*.mp3" -o -name "*.flac" -o -name "*.m4a" | head -10 | while read file; do echo "  Found: $$file"; done || echo "  No audio files found yet"
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) scripts/ingest_audio.py \
+		--raw-dir $(DATA_DIR)/raw \
+		--output-dir $(DATA_DIR)/processed/segments
 
 .PHONY: process-audio
 process-audio: ## Resample, normalize, and segment audio files
 	@echo "🎛️ Processing audio files..."
-	@$(VENV_ACTIVATE) && $(VENV_PYTHON) -m $(SRC_DIR).data.prepare \
-		--input $(DATA_DIR)/processed/segments \
-		--output $(DATA_DIR)/processed/segments \
-		--sample-rate 16000 \
-		--normalize \
-		--segment-length 10
-	@echo "✅ Audio processing complete"
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) scripts/process_audio.py \
+		--segments-dir $(DATA_DIR)/processed/segments
 
 .PHONY: transcribe
 transcribe: ## Generate transcripts using Whisper
 	@echo "🎤 Transcribing audio files..."
-	@$(VENV_ACTIVATE) && $(VENV_PYTHON) -m $(SRC_DIR).data.transcribe \
-		--input $(DATA_DIR)/processed/segments \
-		--output $(DATA_DIR)/processed/transcripts \
-		--model small.en \
-		--language en
-	@echo "✅ Transcription complete"
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) scripts/transcribe_audio.py \
+		--segments-dir $(DATA_DIR)/processed/segments \
+		--transcripts-dir $(DATA_DIR)/processed/transcripts \
+		--model small.en
 
 # ============================================================================
 # TTS GENERATION AND INTERFACE
@@ -185,7 +178,7 @@ demo: ## Generate demo audio with sample Singlish text
 	@echo "🎭 Generating demo audio..."
 	@$(VENV_ACTIVATE) && $(VENV_PYTHON) -m $(SRC_DIR).tts.xtts_infer \
 		--text "The weather today is quite hot, lah. Can you help me with this thing or not?" \
-		--ref-dir $(DATA_DIR)/processed/segments \
+		--ref-dir $(DATA_DIR)/processed/segments/processed \
 		--output $(OUTPUT_DIR)/demo.wav \
 		--temperature 0.7 \
 		--seed 42
@@ -200,7 +193,7 @@ generate: ## Generate speech from text (usage: make generate TEXT="your text her
 	@echo "🗣️ Generating speech: $(TEXT)"
 	@$(VENV_ACTIVATE) && $(VENV_PYTHON) -m $(SRC_DIR).tts.xtts_infer \
 		--text "$(TEXT)" \
-		--ref-dir $(DATA_DIR)/processed/segments \
+		--ref-dir $(DATA_DIR)/processed/segments/processed \
 		--output $(OUTPUT_DIR)/generated_$(shell date +%Y%m%d_%H%M%S).wav \
 		--temperature 0.7
 
