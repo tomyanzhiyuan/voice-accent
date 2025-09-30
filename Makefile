@@ -5,12 +5,12 @@
 # CONFIGURATION AND VARIABLES
 # ============================================================================
 
-# Python and virtual environment settings
-PYTHON := python3.11
-VENV_DIR := venv
-VENV_PYTHON := $(VENV_DIR)/bin/python
-VENV_PIP := $(VENV_DIR)/bin/pip
-VENV_ACTIVATE := source $(VENV_DIR)/bin/activate
+# Conda environment settings
+ENV_NAME := voice-accent
+CONDA_ENV_FILE := environment.yml
+CONDA_ACTIVATE := conda activate $(ENV_NAME)
+CONDA_PYTHON := python
+CONDA_PIP := pip
 
 # Project directories
 SRC_DIR := src
@@ -62,40 +62,38 @@ help: ## Show this help message
 # ============================================================================
 
 .PHONY: setup
-setup: ## Complete project setup (venv, deps, models, directories)
+setup: ## Complete project setup (conda env, deps, models, directories)
 	@echo "🚀 Setting up Singaporean-Accent TTS MVP..."
 	@$(MAKE) check-system
-	@$(MAKE) create-venv
-	@$(MAKE) install-deps
+	@$(MAKE) create-conda-env
 	@$(MAKE) create-dirs
 	@$(MAKE) download-models
 	@$(MAKE) verify-setup
 	@echo "✅ Setup complete! Run 'make help' to see available commands."
+	@echo "💡 To activate environment: conda activate $(ENV_NAME)"
 
 .PHONY: check-system
-check-system: ## Check system dependencies (Python, FFmpeg)
+check-system: ## Check system dependencies (conda, FFmpeg)
 	@echo "🔍 Checking system dependencies..."
-	@command -v $(PYTHON) >/dev/null 2>&1 || { echo "❌ Python 3.11 not found. Please install Python 3.11+"; exit 1; }
-	@$(PYTHON) --version | grep -E "3\.(10|11|12)" >/dev/null || { echo "❌ Python 3.10+ required"; exit 1; }
-	@command -v ffmpeg >/dev/null 2>&1 || { echo "❌ FFmpeg not found. Install with: brew install ffmpeg"; exit 1; }
-	@echo "✅ System dependencies OK"
+	@command -v conda >/dev/null 2>&1 || { echo "❌ Conda not found. Please install Miniconda or Anaconda"; exit 1; }
+	@echo "✅ System dependencies OK - Conda $$(conda --version | cut -d' ' -f2)"
 
-.PHONY: create-venv
-create-venv: ## Create Python virtual environment
-	@echo "🐍 Creating virtual environment..."
-	@if [ ! -d "$(VENV_DIR)" ]; then \
-		$(PYTHON) -m venv $(VENV_DIR); \
-		echo "✅ Virtual environment created"; \
+.PHONY: create-conda-env
+create-conda-env: ## Create conda environment from environment.yml
+	@echo "🐍 Creating conda environment..."
+	@if conda env list | grep -q "^$(ENV_NAME) "; then \
+		echo "✅ Conda environment '$(ENV_NAME)' already exists"; \
 	else \
-		echo "✅ Virtual environment already exists"; \
+		echo "Creating new conda environment from $(CONDA_ENV_FILE)..."; \
+		conda env create -f $(CONDA_ENV_FILE); \
+		echo "✅ Conda environment '$(ENV_NAME)' created"; \
 	fi
 
 .PHONY: install-deps
-install-deps: create-venv ## Install Python dependencies
-	@echo "📦 Installing dependencies..."
-	@$(VENV_PIP) install --upgrade pip setuptools wheel
-	@$(VENV_PIP) install -r requirements.txt
-	@echo "✅ Dependencies installed"
+install-deps: create-conda-env ## Update conda environment dependencies
+	@echo "📦 Updating conda environment dependencies..."
+	@conda env update -f $(CONDA_ENV_FILE) --prune
+	@echo "✅ Dependencies updated"
 
 .PHONY: install-dev-deps
 install-dev-deps: install-deps ## Install development dependencies
@@ -115,16 +113,16 @@ create-dirs: ## Create necessary project directories
 .PHONY: download-models
 download-models: ## Download required TTS models
 	@echo "🤖 Downloading TTS models..."
-	@$(VENV_ACTIVATE) && $(VENV_PYTHON) -c "from TTS.api import TTS; TTS('tts_models/multilingual/multi-dataset/xtts_v2').to('cpu')"
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) -c "from TTS.api import TTS; TTS('tts_models/multilingual/multi-dataset/xtts_v2').to('cpu')"
 	@echo "✅ Models downloaded"
 
 .PHONY: verify-setup
 verify-setup: ## Verify installation and setup
 	@echo "🔍 Verifying setup..."
-	@$(VENV_ACTIVATE) && $(VENV_PYTHON) -c "import torch; print(f'PyTorch: {torch.__version__}')"
-	@$(VENV_ACTIVATE) && $(VENV_PYTHON) -c "import TTS; print('✅ Coqui TTS available')"
-	@$(VENV_ACTIVATE) && $(VENV_PYTHON) -c "import whisper; print('✅ OpenAI Whisper available')"
-	@$(VENV_ACTIVATE) && $(VENV_PYTHON) -c "import gradio; print('✅ Gradio available')"
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) -c "import torch; print(f'PyTorch: {torch.__version__}')"
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) -c "import TTS; print('✅ Coqui TTS available')"
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) -c "import whisper; print('✅ OpenAI Whisper available')"
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) -c "import gradio; print('✅ Gradio available')"
 	@echo "✅ Setup verification complete"
 
 # ============================================================================

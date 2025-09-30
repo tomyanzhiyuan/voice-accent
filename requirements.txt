@@ -11,7 +11,7 @@ torchaudio>=2.0.0,<3.0.0
 torchvision>=0.15.0,<1.0.0
 
 # Transformers and model utilities
-transformers>=4.30.0,<5.0.0
+transformers==4.31.0
 accelerate>=0.20.0,<1.0.0
 safetensors>=0.3.0,<1.0.0
 
@@ -19,11 +19,11 @@ safetensors>=0.3.0,<1.0.0
 # TTS ENGINES AND VOICE PROCESSING
 # ============================================================================
 
-# Coqui TTS (XTTS v2 engine)
-TTS>=0.22.0,<1.0.0
+# Coqui TTS (XTTS v2 engine) - using older compatible version
+TTS>=0.21.0,<0.22.0
 
 # Tortoise TTS (fallback engine)
-tortoise-tts>=2.8.0,<3.0.0
+tortoise-tts>=3.0.0,<4.0.0
 
 # OpenAI Whisper for transcription
 openai-whisper>=20231117,<20250101
@@ -51,7 +51,7 @@ pyworld>=0.3.0,<1.0.0
 
 # Core numerical libraries
 numpy>=1.24.0,<2.0.0
-pandas>=2.0.0,<3.0.0
+pandas>=1.4.0,<2.0.0
 
 # Scientific computing
 scipy>=1.10.0,<2.0.0

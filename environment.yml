@@ -1,0 +1,81 @@
+name: voice-accent
+channels:
+  - conda-forge
+  - pytorch
+dependencies:
+  # Python version
+  - python=3.11
+
+  # Core ML/AI frameworks
+  - pytorch>=2.0.0
+  - torchaudio>=2.0.0
+  - torchvision>=0.15.0
+  - transformers>=4.31.0
+  - accelerate>=0.20.0
+  - safetensors>=0.3.0
+
+  # Audio processing (core packages available in conda-forge)
+  - librosa>=0.10.0
+  - scipy>=1.10.0
+  - ffmpeg
+  - pydub>=0.25.0
+
+  # Numerical computing
+  - numpy>=1.24.0,<2.0.0
+  - pandas>=1.4.0,<2.0.0
+  - scikit-learn>=1.3.0
+  - numba>=0.57.0
+
+  # Web interface
+  - gradio>=4.0.0
+  - fastapi>=0.100.0
+  - uvicorn>=0.23.0
+
+  # Configuration and utilities
+  - python-dotenv>=1.0.0
+  - pyyaml>=6.0
+  - click>=8.0.0
+  - tqdm>=4.65.0
+  - psutil>=5.9.0
+
+  # Development tools
+  - pytest>=7.4.0
+  - pytest-cov>=4.1.0
+  - black>=23.0.0
+  - flake8>=6.0.0
+  - mypy>=1.5.0
+
+  # Jupyter support
+  - jupyter>=1.0.0
+  - ipykernel>=6.25.0
+  - matplotlib>=3.7.0
+  - seaborn>=0.12.0
+
+  # Essential packages that need pip
+  - pip
+  - pip:
+    # TTS engines (must be installed via pip)
+    - TTS>=0.21.0,<0.22.0
+    - openai-whisper>=20231117,<20250101
+    # Note: tortoise-tts removed due to transformers version conflict
+    # Can be added later as optional fallback engine
+    
+    # Audio processing tools not in conda
+    - soundfile>=0.12.0,<1.0.0
+    - pyloudnorm>=0.1.0,<1.0.0
+    - pyworld>=0.3.0,<1.0.0
+    - ffmpeg-python>=0.2.0,<1.0.0
+    
+    # Additional utilities
+    - python-magic>=0.4.0,<1.0.0
+    - patool>=1.12.0,<2.0.0
+    - orjson>=3.9.0,<4.0.0
+    - pydantic>=2.0.0,<3.0.0
+    - toml>=0.10.0,<1.0.0
+    - pre-commit>=3.3.0,<4.0.0
+    - pytest-asyncio>=0.21.0,<1.0.0
+    - loguru>=0.7.0,<1.0.0
+    
+    # Platform-specific (macOS) - install via pip
+    - pyobjc-core>=9.2; sys_platform == "darwin"
+    - pyobjc-framework-avfoundation>=9.2; sys_platform == "darwin"
