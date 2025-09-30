@@ -113,7 +113,7 @@ create-dirs: ## Create necessary project directories
 .PHONY: download-models
 download-models: ## Download required TTS models
 	@echo "🤖 Downloading TTS models..."
-	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) -c "from TTS.api import TTS; TTS('tts_models/multilingual/multi-dataset/xtts_v2').to('cpu')"
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) scripts/download_models.py
 	@echo "✅ Models downloaded"
 
 .PHONY: verify-setup

@@ -5,9 +5,15 @@ A minimal viable product for generating English speech with authentic Singaporea
 ## 🎯 Quick Start (5 Minutes)
 
 ```bash
-# Clone and setup
+# Prerequisites: Install conda (Miniconda or Anaconda)
+# https://docs.conda.io/en/latest/miniconda.html
+
+# Clone and setup with conda
 cd voice-accent
 make setup
+
+# Activate the conda environment
+conda activate voice-accent
 
 # Add your Singaporean accent reference clips to data/raw/refs/
 # (3-10 audio files, 30s-2min each, WAV/MP3 format)
@@ -23,6 +29,8 @@ make demo
 ```
 
 Open http://localhost:7860 in your browser and start generating Singaporean-accented speech!
+
+**✅ Now using Conda for dependency management** - eliminates version conflicts and provides better ML library support!
 
 ## 📋 Table of Contents
 
