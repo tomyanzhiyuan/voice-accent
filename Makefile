@@ -139,24 +139,24 @@ prepare: ## Run complete data processing pipeline (ingest→prepare→transcribe
 
 .PHONY: ingest
 ingest: ## Copy and validate audio files from data/raw to processed (recursive)
-	@echo "📥 Ingesting audio files recursively from $(DATA_DIR)/raw/..."
+	@echo "📥 Ingesting audio files from organized folders in $(DATA_DIR)/raw/..."
 	@echo "🔍 Searching for audio files in subdirectories..."
 	@find $(DATA_DIR)/raw -name "*.wav" -o -name "*.mp3" -o -name "*.flac" -o -name "*.m4a" | head -10 | while read file; do echo "  Found: $$file"; done || echo "  No audio files found yet"
 	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) scripts/ingest_audio.py \
 		--raw-dir $(DATA_DIR)/raw \
-		--output-dir $(DATA_DIR)/processed/segments
+		--output-dir $(DATA_DIR)/processed
 
 .PHONY: process-audio
 process-audio: ## Resample, normalize, and segment audio files
 	@echo "🎛️ Processing audio files..."
 	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) scripts/process_audio.py \
-		--segments-dir $(DATA_DIR)/processed/segments
+		--segments-dir $(DATA_DIR)/processed
 
 .PHONY: transcribe
 transcribe: ## Generate transcripts using Whisper
 	@echo "🎤 Transcribing audio files..."
 	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) scripts/transcribe_audio.py \
-		--segments-dir $(DATA_DIR)/processed/segments \
+		--segments-dir $(DATA_DIR)/processed \
 		--transcripts-dir $(DATA_DIR)/processed/transcripts \
 		--model small.en
 

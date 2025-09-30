@@ -12,30 +12,27 @@ import argparse
 from loguru import logger
 import pyloudnorm as pyln
 
-def process_audio_files(segments_dir: Path) -> int:
+def process_audio_files(processed_dir: Path) -> int:
     """
     Process audio files: resample to 16kHz, normalize loudness, convert to WAV.
     
     Args:
-        segments_dir: Directory containing raw/ and processed/ subdirectories
+        processed_dir: Directory containing audio/ subdirectory with MP3 files
         
     Returns:
         Number of files processed
     """
-    # Define input and output directories
-    raw_dir = segments_dir / "raw"
-    processed_dir = segments_dir / "processed"
+    # Define input directory
+    audio_dir = processed_dir / "audio"
     
-    # Ensure directories exist
-    if not raw_dir.exists():
-        logger.error(f"Raw directory does not exist: {raw_dir}")
+    # Ensure directory exists
+    if not audio_dir.exists():
+        logger.error(f"Audio directory does not exist: {audio_dir}")
         return 0
     
-    processed_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Find all audio files in raw directory
-    audio_files = list(raw_dir.glob('*.wav')) + list(raw_dir.glob('*.mp3'))
-    logger.info(f"Processing {len(audio_files)} audio files from raw/ directory...")
+    # Find all audio files in audio directory
+    audio_files = list(audio_dir.glob('*.wav')) + list(audio_dir.glob('*.mp3'))
+    logger.info(f"Processing {len(audio_files)} audio files from audio/ directory...")
     
     # Initialize loudness meter
     meter = pyln.Meter(16000)
@@ -55,11 +52,12 @@ def process_audio_files(segments_dir: Path) -> int:
                 # Clip to prevent distortion
                 y_norm = np.clip(y_norm, -1.0, 1.0)
                 
-                # Save as processed WAV file in processed/ directory
-                out_path = processed_dir / f"{audio_file.stem}_processed.wav"
+                # Save as processed WAV file in same directory, replacing original
+                # Change extension from .mp3 to .wav and keep folder-based naming
+                out_path = audio_dir / f"{audio_file.stem}.wav"
                 sf.write(out_path, y_norm, 16000)
                 
-                logger.info(f"  Processed: raw/{audio_file.name} -> processed/{out_path.name}")
+                logger.info(f"  Processed: {audio_file.name} -> {out_path.name}")
                 processed_count += 1
             else:
                 logger.warning(f"  Skipped (too short): {audio_file.name}")
@@ -67,7 +65,7 @@ def process_audio_files(segments_dir: Path) -> int:
         except Exception as e:
             logger.error(f"  Error processing {audio_file.name}: {e}")
     
-    logger.success(f"✅ Audio processing complete - {processed_count} files processed to processed/ subdirectory")
+    logger.success(f"✅ Audio processing complete - {processed_count} files processed in audio/ directory")
     return processed_count
 
 def main():

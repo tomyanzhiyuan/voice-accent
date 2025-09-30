@@ -10,24 +10,24 @@ from pathlib import Path
 import argparse
 from loguru import logger
 
-def transcribe_audio_files(segments_dir: Path, transcripts_dir: Path, model_name: str = "small.en") -> int:
+def transcribe_audio_files(processed_dir: Path, transcripts_dir: Path, model_name: str = "small.en") -> int:
     """
     Transcribe audio files using Whisper.
     
     Args:
-        segments_dir: Directory containing raw/ and processed/ subdirectories
+        processed_dir: Directory containing audio/ subdirectory with WAV files
         transcripts_dir: Directory to save transcripts
         model_name: Whisper model to use
         
     Returns:
         Number of files transcribed
     """
-    # Define processed audio directory
-    processed_dir = segments_dir / "processed"
+    # Define audio directory
+    audio_dir = processed_dir / "audio"
     
     # Ensure directories exist
-    if not processed_dir.exists():
-        logger.error(f"Processed directory does not exist: {processed_dir}")
+    if not audio_dir.exists():
+        logger.error(f"Audio directory does not exist: {audio_dir}")
         return 0
     
     transcripts_dir.mkdir(parents=True, exist_ok=True)
@@ -36,9 +36,9 @@ def transcribe_audio_files(segments_dir: Path, transcripts_dir: Path, model_name
     logger.info(f"Loading Whisper model: {model_name}")
     model = whisper.load_model(model_name)
     
-    # Find processed audio files
-    audio_files = list(processed_dir.glob('*_processed.wav'))
-    logger.info(f"Transcribing {len(audio_files)} audio files from processed/ directory...")
+    # Find processed WAV files (with folder-based naming)
+    audio_files = list(audio_dir.glob('*.wav'))
+    logger.info(f"Transcribing {len(audio_files)} audio files from audio/ directory...")
     
     transcribed_count = 0
     
@@ -47,10 +47,10 @@ def transcribe_audio_files(segments_dir: Path, transcripts_dir: Path, model_name
             # Transcribe audio
             result = model.transcribe(str(audio_file), language='en')
             
-            # Save transcript as JSON
+            # Save transcript as JSON with matching name
             transcript_file = transcripts_dir / f"{audio_file.stem}.json"
             transcript_data = {
-                'file': f"processed/{audio_file.name}",
+                'file': f"audio/{audio_file.name}",
                 'text': result['text'],
                 'segments': result['segments']
             }
@@ -58,7 +58,7 @@ def transcribe_audio_files(segments_dir: Path, transcripts_dir: Path, model_name
             with open(transcript_file, 'w') as f:
                 json.dump(transcript_data, f, indent=2)
             
-            logger.info(f"  Transcribed: processed/{audio_file.name}")
+            logger.info(f"  Transcribed: audio/{audio_file.name}")
             transcribed_count += 1
             
         except Exception as e:
