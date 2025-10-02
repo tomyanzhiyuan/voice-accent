@@ -42,8 +42,9 @@ def ingest_audio_files(raw_dir: Path, output_dir: Path) -> int:
     
     logger.info(f"Found {len(files_found)} audio files in organized folders")
     
-    # Copy files with folder-based naming
+    # Copy files with folder-based naming (skip if already exists)
     copied_count = 0
+    skipped_count = 0
     for src in files_found:
         try:
             # Get folder name for prefix
@@ -53,13 +54,22 @@ def ingest_audio_files(raw_dir: Path, output_dir: Path) -> int:
             new_name = f"{folder_name}-{src.name}"
             dst = audio_output_dir / new_name
             
+            # Skip if destination file already exists
+            if dst.exists():
+                logger.info(f"  Skipped (already exists): {folder_name}/{src.name} -> audio/{dst.name}")
+                skipped_count += 1
+                continue
+            
             shutil.copy2(src, dst)
             logger.info(f"  Copied: {folder_name}/{src.name} -> audio/{dst.name}")
             copied_count += 1
         except Exception as e:
             logger.error(f"  Error copying {src.name}: {e}")
     
-    logger.success(f"✅ Audio ingestion complete - {copied_count} files copied to audio/ directory")
+    if skipped_count > 0:
+        logger.success(f"✅ Audio ingestion complete - {copied_count} files copied, {skipped_count} files skipped (already exist)")
+    else:
+        logger.success(f"✅ Audio ingestion complete - {copied_count} files copied to audio/ directory")
     return copied_count
 
 def main():
@@ -78,9 +88,7 @@ def main():
     
     try:
         copied_count = ingest_audio_files(args.raw_dir, args.output_dir)
-        if copied_count == 0:
-            logger.warning("No audio files found to copy")
-            return 1
+        # Success even if no files were copied (they might already exist)
         return 0
     except Exception as e:
         logger.error(f"Ingestion failed: {e}")

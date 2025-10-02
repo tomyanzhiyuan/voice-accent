@@ -41,14 +41,23 @@ def transcribe_audio_files(processed_dir: Path, transcripts_dir: Path, model_nam
     logger.info(f"Transcribing {len(audio_files)} audio files from audio/ directory...")
     
     transcribed_count = 0
+    skipped_count = 0
     
     for audio_file in audio_files:
         try:
+            # Define transcript output path
+            transcript_file = transcripts_dir / f"{audio_file.stem}.json"
+            
+            # Skip if transcript already exists and is newer than audio file
+            if transcript_file.exists() and transcript_file.stat().st_mtime >= audio_file.stat().st_mtime:
+                logger.info(f"  Skipped (already transcribed): audio/{audio_file.name}")
+                skipped_count += 1
+                continue
+            
             # Transcribe audio
             result = model.transcribe(str(audio_file), language='en')
             
             # Save transcript as JSON with matching name
-            transcript_file = transcripts_dir / f"{audio_file.stem}.json"
             transcript_data = {
                 'file': f"audio/{audio_file.name}",
                 'text': result['text'],
@@ -64,7 +73,10 @@ def transcribe_audio_files(processed_dir: Path, transcripts_dir: Path, model_nam
         except Exception as e:
             logger.error(f"  Error transcribing {audio_file.name}: {e}")
     
-    logger.success(f"✅ Transcription complete - {transcribed_count} files transcribed")
+    if skipped_count > 0:
+        logger.success(f"✅ Transcription complete - {transcribed_count} files transcribed, {skipped_count} files skipped (already transcribed)")
+    else:
+        logger.success(f"✅ Transcription complete - {transcribed_count} files transcribed")
     return transcribed_count
 
 def main():
@@ -85,9 +97,7 @@ def main():
     
     try:
         transcribed_count = transcribe_audio_files(args.segments_dir, args.transcripts_dir, args.model)
-        if transcribed_count == 0:
-            logger.warning("No audio files were transcribed")
-            return 1
+        # Success even if no files were transcribed (they might already be transcribed)
         return 0
     except Exception as e:
         logger.error(f"Transcription failed: {e}")

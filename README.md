@@ -65,22 +65,26 @@ Reference Audio → Audio Processing → Speaker Embedding → TTS Generation
 ## ✨ Features
 
 ### 🎤 Voice Cloning
+
 - **Few-shot Learning**: Generate accent from 3-10 reference clips
 - **Dual TTS Engines**: XTTS v2 (primary) + Tortoise-TTS (fallback)
 - **Quality Tiers**: 30s demo → 5min good → 30min premium quality
 
 ### 🎵 Audio Processing
+
 - **Format Support**: WAV, MP3, OGG input formats
 - **Auto-Processing**: 16kHz mono, normalized, segmented
 - **Quality Validation**: Noise detection, clipping analysis
 
 ### 🌐 Web Interface
+
 - **Gradio UI**: Intuitive web interface with real-time generation
 - **Pre-filled Examples**: Singlish sentences for testing
 - **Model Selection**: Switch between XTTS and Tortoise engines
 - **Parameter Control**: Temperature, seed, generation settings
 
 ### 📊 Evaluation Tools
+
 - **Accent Checklist**: Phonetic and prosodic feature assessment
 - **A/B Testing**: Compare generated vs reference audio
 - **Quality Metrics**: Intelligibility, naturalness, authenticity scores
@@ -90,7 +94,7 @@ Reference Audio → Audio Processing → Speaker Embedding → TTS Generation
 ### System Requirements
 
 - **OS**: macOS 10.15+ (tested), Linux, Windows WSL2
-- **Python**: 3.10 or 3.11 (recommended)
+- **Python**: 3.11 (Anything newer isn't fully supported)
 - **Memory**: 4GB RAM minimum, 8GB recommended
 - **Storage**: 5-10GB for models and audio data
 - **GPU**: Optional (CUDA/MPS), 3-5x speedup when available
@@ -137,6 +141,7 @@ make setup
 ```
 
 This will:
+
 1. Create Python virtual environment
 2. Install all dependencies with proper versions
 3. Download required TTS models
@@ -160,6 +165,7 @@ data/raw/refs/
 ```
 
 **Audio Requirements**:
+
 - **Duration**: 30 seconds to 2 minutes per file
 - **Quality**: Clear speech, minimal background noise
 - **Content**: Natural conversational English with Singaporean accent
@@ -168,7 +174,7 @@ data/raw/refs/
 ### 2. Process Audio Pipeline
 
 ```bash
-# Run complete processing pipeline
+# Run complete processing pipeline (intelligent skip logic - only processes new/changed files)
 make prepare
 
 # Or run individual steps
@@ -176,6 +182,8 @@ python -m src.data.ingest      # Copy and validate audio files
 python -m src.data.prepare     # Resample, normalize, segment
 python -m src.data.transcribe  # Generate transcripts with Whisper
 ```
+
+**✨ Smart Processing**: The pipeline now intelligently skips files that have already been processed, making subsequent runs much faster. Only new or modified files will be reprocessed.
 
 ### 3. Launch Web Interface
 
@@ -225,27 +233,30 @@ sf.write("output.wav", audio, sample_rate)
 
 ### Quality Tiers
 
-| Duration | Quality Level | Characteristics |
-|----------|---------------|-----------------|
-| 30-60s   | Demo          | Basic accent, unstable prosody |
+| Duration | Quality Level | Characteristics                   |
+| -------- | ------------- | --------------------------------- |
+| 30-60s   | Demo          | Basic accent, unstable prosody    |
 | 5-10min  | Good          | Stable accent, recommended for v1 |
 | 30-60min | Premium       | High fidelity, varied expressions |
 
 ### Recording Tips
 
 **Content Suggestions**:
+
 - Casual conversations with friends/family
 - Reading news articles or stories aloud
 - Phone calls or video calls (with permission)
 - Podcast segments or interview clips
 
 **Technical Quality**:
+
 - Use quiet environment (minimal echo, background noise)
 - Consistent distance from microphone
 - Avoid music, overlapping speech, long silences
 - Natural speaking pace and intonation
 
 **Accent Authenticity**:
+
 - Include varied vocabulary and sentence structures
 - Natural use of Singaporean English features
 - Conversational tone rather than formal reading
@@ -254,6 +265,7 @@ sf.write("output.wav", audio, sample_rate)
 ### Privacy & Consent
 
 ⚠️ **Important**: Only use audio with explicit permission from speakers. This system is designed for:
+
 - Personal voice cloning (your own voice)
 - Family/friends with clear consent
 - Public domain or Creative Commons audio
@@ -363,18 +375,21 @@ results = processor.process_directory(
 Use `src/eval/checklist.md` for systematic evaluation:
 
 #### Phonetic Features (1-5 scale)
+
 - **TH-stopping**: "thing" → "ting", "that" → "dat"
 - **Final consonant deletion**: "want" → "wan", "and" → "an"
 - **Vowel system**: Singaporean English vowel inventory
 - **Consonant clusters**: Simplification patterns
 
 #### Prosodic Features (1-5 scale)
+
 - **Rhythm**: Syllable-timed vs stress-timed patterns
 - **Intonation**: Rising final intonation, question patterns
 - **Stress**: Even syllable prominence
 - **Pace**: Natural conversational speed
 
 #### Overall Quality (1-5 scale)
+
 - **Naturalness**: Sounds like native Singaporean speaker
 - **Intelligibility**: Clear and understandable
 - **Consistency**: Stable accent throughout
@@ -405,6 +420,7 @@ print(f"Quality score: {scores['quality']:.2f}")
 #### Installation Problems
 
 **FFmpeg not found**:
+
 ```bash
 # macOS
 brew install ffmpeg
@@ -417,6 +433,7 @@ ffmpeg -version
 ```
 
 **PyTorch CUDA issues**:
+
 ```bash
 # Check CUDA availability
 python -c "import torch; print(torch.cuda.is_available())"
@@ -427,6 +444,7 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 ```
 
 **Memory errors during model loading**:
+
 ```bash
 # Use CPU-only mode
 export ACCENT_TTS_DEVICE=cpu
@@ -438,16 +456,19 @@ export ACCENT_TTS_BATCH_SIZE=1
 #### Audio Processing Issues
 
 **"No audio files found"**:
+
 - Check file formats (WAV, MP3, OGG supported)
 - Verify file permissions (readable by Python)
 - Ensure files are not corrupted
 
 **"Audio too short/long"**:
+
 - Reference clips should be 30s-2min each
 - Use `--min-duration` and `--max-duration` flags
 - Check audio segmentation settings
 
 **"Poor audio quality"**:
+
 - Use quiet recording environment
 - Avoid compressed/low-bitrate files
 - Check for clipping or distortion
@@ -455,16 +476,19 @@ export ACCENT_TTS_BATCH_SIZE=1
 #### TTS Generation Issues
 
 **"Speaker embedding failed"**:
+
 - Need at least 3 reference clips
 - Ensure clips contain clear speech
 - Check audio preprocessing completed successfully
 
 **"Generation too slow"**:
+
 - Use XTTS instead of Tortoise for speed
 - Enable GPU acceleration if available
 - Reduce text length for testing
 
 **"Poor accent quality"**:
+
 - Use more/better reference clips (5-10 recommended)
 - Ensure reference audio has strong Singaporean accent
 - Try different temperature settings (0.5-0.9)

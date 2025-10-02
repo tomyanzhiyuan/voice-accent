@@ -37,9 +37,19 @@ def process_audio_files(processed_dir: Path) -> int:
     # Initialize loudness meter
     meter = pyln.Meter(16000)
     processed_count = 0
+    skipped_count = 0
     
     for audio_file in audio_files:
         try:
+            # Define output path
+            out_path = audio_dir / f"{audio_file.stem}.wav"
+            
+            # Skip if already processed (WAV file exists and is newer than source)
+            if out_path.exists() and out_path.stat().st_mtime >= audio_file.stat().st_mtime:
+                logger.info(f"  Skipped (already processed): {audio_file.name} -> {out_path.name}")
+                skipped_count += 1
+                continue
+            
             # Load audio at 16kHz mono
             y, sr = librosa.load(audio_file, sr=16000, mono=True)
             
@@ -54,7 +64,6 @@ def process_audio_files(processed_dir: Path) -> int:
                 
                 # Save as processed WAV file in same directory, replacing original
                 # Change extension from .mp3 to .wav and keep folder-based naming
-                out_path = audio_dir / f"{audio_file.stem}.wav"
                 sf.write(out_path, y_norm, 16000)
                 
                 logger.info(f"  Processed: {audio_file.name} -> {out_path.name}")
@@ -65,7 +74,10 @@ def process_audio_files(processed_dir: Path) -> int:
         except Exception as e:
             logger.error(f"  Error processing {audio_file.name}: {e}")
     
-    logger.success(f"✅ Audio processing complete - {processed_count} files processed in audio/ directory")
+    if skipped_count > 0:
+        logger.success(f"✅ Audio processing complete - {processed_count} files processed, {skipped_count} files skipped (already processed)")
+    else:
+        logger.success(f"✅ Audio processing complete - {processed_count} files processed in audio/ directory")
     return processed_count
 
 def main():
@@ -82,9 +94,7 @@ def main():
     
     try:
         processed_count = process_audio_files(args.segments_dir)
-        if processed_count == 0:
-            logger.warning("No audio files were processed")
-            return 1
+        # Success even if no files were processed (they might already be processed)
         return 0
     except Exception as e:
         logger.error(f"Audio processing failed: {e}")
