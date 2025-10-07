@@ -98,8 +98,8 @@ install-deps: create-conda-env ## Update conda environment dependencies
 .PHONY: install-dev-deps
 install-dev-deps: install-deps ## Install development dependencies
 	@echo "🛠️ Installing development dependencies..."
-	@$(VENV_PIP) install pytest pytest-cov black flake8 mypy pre-commit
-	@$(VENV_ACTIVATE) && pre-commit install
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PIP) install pytest pytest-cov black flake8 mypy pre-commit
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && pre-commit install
 	@echo "✅ Development dependencies installed"
 
 .PHONY: create-dirs
@@ -168,7 +168,7 @@ transcribe: ## Generate transcripts using Whisper
 ui: ## Launch Gradio web interface
 	@echo "🌐 Launching Gradio interface..."
 	@echo "📍 Opening http://$(GRADIO_HOST):$(GRADIO_PORT)"
-	@$(VENV_ACTIVATE) && $(VENV_PYTHON) -m $(SRC_DIR).ui.app \
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) -m $(SRC_DIR).ui.app \
 		--host $(GRADIO_HOST) \
 		--port $(GRADIO_PORT) \
 		--share false
@@ -176,7 +176,7 @@ ui: ## Launch Gradio web interface
 .PHONY: demo
 demo: ## Generate demo audio with sample Singlish text
 	@echo "🎭 Generating demo audio..."
-	@$(VENV_ACTIVATE) && $(VENV_PYTHON) -m $(SRC_DIR).tts.xtts_infer \
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) -m $(SRC_DIR).tts.xtts_infer \
 		--text "The weather today is quite hot, lah. Can you help me with this thing or not?" \
 		--ref-dir $(DATA_DIR)/processed/segments/processed \
 		--output $(OUTPUT_DIR)/demo.wav \
@@ -191,7 +191,7 @@ generate: ## Generate speech from text (usage: make generate TEXT="your text her
 		exit 1; \
 	fi
 	@echo "🗣️ Generating speech: $(TEXT)"
-	@$(VENV_ACTIVATE) && $(VENV_PYTHON) -m $(SRC_DIR).tts.xtts_infer \
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) -m $(SRC_DIR).tts.xtts_infer \
 		--text "$(TEXT)" \
 		--ref-dir $(DATA_DIR)/processed/segments/processed \
 		--output $(OUTPUT_DIR)/generated_$(shell date +%Y%m%d_%H%M%S).wav \
@@ -204,7 +204,7 @@ generate: ## Generate speech from text (usage: make generate TEXT="your text her
 .PHONY: test
 test: ## Run test suite with coverage
 	@echo "🧪 Running tests..."
-	@$(VENV_ACTIVATE) && $(VENV_PYTHON) -m pytest $(TEST_DIR) \
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) -m pytest $(TEST_DIR) \
 		--cov=$(SRC_DIR) \
 		--cov-report=html \
 		--cov-report=term \
@@ -214,17 +214,17 @@ test: ## Run test suite with coverage
 .PHONY: test-fast
 test-fast: ## Run tests without coverage (faster)
 	@echo "⚡ Running fast tests..."
-	@$(VENV_ACTIVATE) && $(VENV_PYTHON) -m pytest $(TEST_DIR) -v
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) -m pytest $(TEST_DIR) -v
 
 .PHONY: test-audio
 test-audio: ## Run audio processing tests
 	@echo "🎵 Running audio tests..."
-	@$(VENV_ACTIVATE) && $(VENV_PYTHON) -m pytest $(TEST_DIR)/audio -v
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) -m pytest $(TEST_DIR)/audio -v
 
 .PHONY: test-tts
 test-tts: ## Run TTS engine tests
 	@echo "🤖 Running TTS tests..."
-	@$(VENV_ACTIVATE) && $(VENV_PYTHON) -m pytest $(TEST_DIR)/unit/test_tts* -v
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) -m pytest $(TEST_DIR)/unit/test_tts* -v
 
 # ============================================================================
 # CODE QUALITY AND FORMATTING
@@ -240,23 +240,23 @@ lint: ## Run all linting and code quality checks
 .PHONY: format
 format: ## Format code with Black
 	@echo "🎨 Formatting code..."
-	@$(VENV_ACTIVATE) && black --line-length $(BLACK_LINE_LENGTH) $(SRC_DIR) $(TEST_DIR)
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && black --line-length $(BLACK_LINE_LENGTH) $(SRC_DIR) $(TEST_DIR)
 	@echo "✅ Code formatted"
 
 .PHONY: format-check
 format-check: ## Check code formatting without making changes
 	@echo "🎨 Checking code formatting..."
-	@$(VENV_ACTIVATE) && black --check --line-length $(BLACK_LINE_LENGTH) $(SRC_DIR) $(TEST_DIR)
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && black --check --line-length $(BLACK_LINE_LENGTH) $(SRC_DIR) $(TEST_DIR)
 
 .PHONY: flake8
 flake8: ## Run flake8 linting
 	@echo "🔍 Running flake8..."
-	@$(VENV_ACTIVATE) && flake8 --max-line-length $(FLAKE8_MAX_LINE_LENGTH) $(SRC_DIR) $(TEST_DIR)
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && flake8 --max-line-length $(FLAKE8_MAX_LINE_LENGTH) $(SRC_DIR) $(TEST_DIR)
 
 .PHONY: mypy
 mypy: ## Run mypy type checking
 	@echo "🔍 Running mypy..."
-	@$(VENV_ACTIVATE) && mypy $(SRC_DIR) --ignore-missing-imports
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && mypy $(SRC_DIR) --ignore-missing-imports
 
 # ============================================================================
 # UTILITIES AND MAINTENANCE
@@ -275,9 +275,8 @@ clean: ## Remove generated files and caches
 	@echo "✅ Cleanup complete"
 
 .PHONY: clean-all
-clean-all: clean ## Remove all generated files, models, and virtual environment
+clean-all: clean ## Remove all generated files, models, and cache
 	@echo "🧹 Deep cleaning..."
-	@rm -rf $(VENV_DIR)
 	@rm -rf $(MODEL_DIR)/*
 	@rm -rf .pytest_cache
 	@rm -rf htmlcov
@@ -293,8 +292,8 @@ logs: ## Show recent log files
 status: ## Show project status and diagnostics
 	@echo "📊 Project Status"
 	@echo "=================="
-	@echo "Python: $(shell $(PYTHON) --version 2>/dev/null || echo 'Not found')"
-	@echo "Virtual env: $(shell [ -d $(VENV_DIR) ] && echo 'Active' || echo 'Not created')"
+	@echo "Python: $(shell $(CONDA_PYTHON) --version 2>/dev/null || echo 'Not found')"
+	@echo "Conda env: $(shell conda env list | grep -q "^$(ENV_NAME) " && echo 'Active' || echo 'Not created')"
 	@echo "FFmpeg: $(shell ffmpeg -version 2>/dev/null | head -1 || echo 'Not found')"
 	@echo ""
 	@echo "📁 Directory Status:"
@@ -311,13 +310,13 @@ status: ## Show project status and diagnostics
 .PHONY: requirements-update
 requirements-update: ## Update requirements.txt with current environment
 	@echo "📦 Updating requirements..."
-	@$(VENV_ACTIVATE) && pip freeze > requirements-frozen.txt
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && pip freeze > requirements-frozen.txt
 	@echo "✅ Current environment saved to requirements-frozen.txt"
 
 .PHONY: benchmark
 benchmark: ## Run performance benchmarks
 	@echo "⚡ Running benchmarks..."
-	@$(VENV_ACTIVATE) && $(VENV_PYTHON) -m $(SRC_DIR).utils.benchmark \
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && $(CONDA_PYTHON) -m $(SRC_DIR).utils.benchmark \
 		--ref-dir $(DATA_DIR)/processed/segments \
 		--output $(OUTPUT_DIR)/benchmark_results.json
 	@echo "✅ Benchmark complete"
@@ -333,12 +332,12 @@ dev: install-dev-deps ## Setup development environment
 .PHONY: notebook
 notebook: ## Launch Jupyter notebook
 	@echo "📓 Launching Jupyter notebook..."
-	@$(VENV_ACTIVATE) && jupyter notebook notebooks/
+	@eval "$$(conda shell.bash hook)" && $(CONDA_ACTIVATE) && jupyter notebook notebooks/
 
 .PHONY: shell
-shell: ## Activate virtual environment shell
-	@echo "🐚 Activating virtual environment..."
-	@echo "Run: source $(VENV_DIR)/bin/activate"
+shell: ## Activate conda environment shell
+	@echo "🐚 Activating conda environment..."
+	@echo "Run: conda activate $(ENV_NAME)"
 
 # ============================================================================
 # DOCKER SUPPORT (OPTIONAL)

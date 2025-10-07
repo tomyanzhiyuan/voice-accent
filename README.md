@@ -97,7 +97,13 @@ Reference Audio → Audio Processing → Speaker Embedding → TTS Generation
 - **Python**: 3.11 (Anything newer isn't fully supported)
 - **Memory**: 4GB RAM minimum, 8GB recommended
 - **Storage**: 5-10GB for models and audio data
-- **GPU**: Optional (CUDA/MPS), 3-5x speedup when available
+- **GPU**: CUDA supported, MPS not supported (has compatibility issues), CPU works well
+
+### Known Compatibility Notes
+
+- **PyTorch 2.6+**: Requires `weights_only=False` for model loading (automatically patched)
+- **MPS (Apple Silicon)**: Not supported due to convolution limitations, uses CPU instead
+- **Transformers**: Use version 4.33.0 (newer versions have breaking changes with TTS 0.21.3)
 
 ### Prerequisites
 
