@@ -11,9 +11,14 @@ accent-tts/
 ├── src/
 │   ├── data/
 │   │   ├── __init__.py
-│   │   ├── ingest.py          # Audio validation & copying to data/raw
-│   │   ├── prepare.py         # Resampling, normalization, segmentation
-│   │   └── transcribe.py      # Whisper transcription pipeline
+│   │   ├── ingest.py              # Audio validation & copying to data/raw
+│   │   ├── prepare.py             # Resampling, normalization, segmentation
+│   │   ├── transcribe.py          # Whisper transcription pipeline
+│   │   ├── enhanced_processor.py  # Enhanced pipeline orchestrator
+│   │   ├── diarization.py         # Speaker separation (pyannote.audio)
+│   │   ├── vad.py                 # Voice activity detection (silero-vad)
+│   │   ├── quality_filter.py      # Quality metrics & filtering
+│   │   └── segmentation.py        # Smart segmentation on pauses
 │   ├── tts/
 │   │   ├── __init__.py
 │   │   ├── xtts_infer.py      # XTTS v2 inference engine (primary)
@@ -31,6 +36,7 @@ accent-tts/
 │       └── transcripts/      # Generated transcriptions (.jsonl)
 ├── outputs/                   # Generated audio files
 ├── config/                    # Configuration files
+│   └── processing_config.yaml # Enhanced pipeline configuration
 ├── tests/                     # Unit and integration tests
 ├── docs/                      # Additional documentation
 ├── scripts/                   # Utility and setup scripts
@@ -168,30 +174,304 @@ class XTTSInferenceEngine(BaseTTSEngine):
 - **Format**: Mono WAV files for processing
 - **Bit Depth**: 16-bit for storage, 32-bit float for processing
 - **Loudness**: Normalized to -23 LUFS (broadcast standard)
-- **Segment Length**: ≤10 seconds for optimal TTS performance
+- **Segment Length**: 1-10 seconds (target 3-8s for optimal TTS performance)
 
-### Audio Pipeline Requirements
-```python
-def process_audio_file(input_path: Path, output_path: Path) -> Dict[str, Any]:
-    """Process raw audio for TTS training/inference.
-    
-    Pipeline: Load → Resample → Normalize → Segment → Validate
-    
-    Args:
-        input_path: Raw audio file (WAV/MP3/OGG)
-        output_path: Processed output directory
-        
-    Returns:
-        Processing metadata including duration, segments, quality metrics
-    """
-    pass
+### Enhanced Audio Processing Pipeline
+
+The enhanced pipeline provides production-grade preprocessing for multi-speaker audio with background noise:
+
+```
+Raw Audio (MP3/WAV/OGG)
+    ↓
+[1] Speaker Diarization (pyannote.audio)
+    ↓ Identify and separate individual speakers
+[2] Voice Activity Detection (silero-vad)
+    ↓ Remove silence, music, background noise
+[3] Noise Reduction (noisereduce)
+    ↓ Clean up remaining background noise
+[4] Quality Filtering (SNR, clipping, frequency)
+    ↓ Reject poor quality segments
+[5] Smart Segmentation (natural pauses)
+    ↓ Split on phrase boundaries, not mid-word
+[6] Duration Filtering (1-10 seconds)
+    ↓ Keep optimal length segments
+[7] Normalization (-23 LUFS)
+    ↓ Consistent volume across all segments
+[8] Export + Statistics
+    ↓ Organized by speaker with quality report
+High-Quality Training Segments
 ```
 
-### Quality Validation
-- Check for clipping, silence, background noise
-- Validate duration (30s-2min per clip for good quality)
-- Ensure consistent volume levels across clips
-- Detect and flag low-quality segments
+### Pipeline Module Responsibilities
+
+#### 1. Speaker Diarization (`diarization.py`)
+```python
+class SpeakerDiarizer:
+    """Identify and separate speakers using pyannote.audio.
+    
+    Features:
+    - Automatic speaker detection (1-10 speakers)
+    - Speaker labeling and tracking
+    - Overlapping speech handling
+    - Per-speaker segment extraction
+    
+    Requirements:
+    - Hugging Face token for pyannote.audio models
+    - Accept terms at: huggingface.co/pyannote/speaker-diarization
+    """
+    
+    def diarize(self, audio_path: Path) -> Dict[str, List[Tuple[float, float]]]:
+        """Identify speakers and return time segments.
+        
+        Returns:
+            Dict mapping speaker_id to list of (start_time, end_time) tuples
+        """
+        pass
+```
+
+#### 2. Voice Activity Detection (`vad.py`)
+```python
+class VoiceActivityDetector:
+    """Detect speech vs non-speech using silero-vad.
+    
+    Features:
+    - Fast, accurate speech detection
+    - Configurable aggressiveness (0.0-1.0)
+    - Removes silence, music, background noise
+    - Preserves natural speech boundaries
+    
+    Thresholds:
+    - Min speech duration: 0.5s
+    - Min silence duration: 0.3s
+    - Confidence threshold: 0.5 (default)
+    """
+    
+    def detect_speech(self, audio: np.ndarray, sr: int) -> List[Tuple[float, float]]:
+        """Detect speech segments in audio.
+        
+        Returns:
+            List of (start_time, end_time) tuples for speech regions
+        """
+        pass
+```
+
+#### 3. Quality Filtering (`quality_filter.py`)
+```python
+class AudioQualityFilter:
+    """Filter segments by quality metrics.
+    
+    Quality Thresholds:
+    - SNR (Signal-to-Noise Ratio): >15 dB
+    - Clipping: <1% of samples
+    - Frequency range: 80Hz - 8kHz (speech spectrum)
+    - Energy variance: >0.1 (reject monotone)
+    - Duration: 1-10 seconds
+    
+    Metrics Computed:
+    - SNR using noise floor estimation
+    - Clipping ratio (samples at ±1.0)
+    - Spectral centroid and bandwidth
+    - RMS energy and variance
+    """
+    
+    def filter_segment(self, audio: np.ndarray, sr: int) -> Tuple[bool, Dict[str, float]]:
+        """Evaluate segment quality.
+        
+        Returns:
+            (passes_filter, quality_metrics)
+        """
+        pass
+```
+
+#### 4. Smart Segmentation (`segmentation.py`)
+```python
+class SmartSegmenter:
+    """Segment audio on natural pauses, not fixed durations.
+    
+    Features:
+    - Detect pauses >300ms
+    - Avoid mid-word cuts
+    - Target 3-8 second segments
+    - Merge very short segments (<1s)
+    - Preserve prosodic units
+    
+    Algorithm:
+    1. Detect silence regions (VAD)
+    2. Identify natural boundaries
+    3. Split on pauses while respecting duration targets
+    4. Merge fragments to meet minimum duration
+    """
+    
+    def segment(self, audio: np.ndarray, sr: int) -> List[np.ndarray]:
+        """Split audio on natural pauses.
+        
+        Returns:
+            List of audio segments (1-10s each)
+        """
+        pass
+```
+
+### Configuration System
+
+All pipeline parameters are configurable via `config/processing_config.yaml`:
+
+```yaml
+# Enhanced Audio Processing Configuration
+
+diarization:
+  enabled: true
+  min_speakers: 1
+  max_speakers: 10
+  min_segment_duration: 1.0  # seconds
+  
+vad:
+  enabled: true
+  threshold: 0.5              # 0.0-1.0, higher = more aggressive
+  min_speech_duration: 0.5    # seconds
+  min_silence_duration: 0.3   # seconds
+  
+noise_reduction:
+  enabled: true
+  stationary: true            # Assume stationary noise
+  prop_decrease: 0.8          # 0.0-1.0, reduction strength
+  
+quality_filter:
+  min_snr: 15.0               # dB
+  max_clipping_ratio: 0.01    # 1%
+  min_frequency: 80           # Hz
+  max_frequency: 8000         # Hz
+  min_energy_variance: 0.1    # Reject flat audio
+  
+segmentation:
+  min_duration: 1.0           # seconds
+  max_duration: 10.0          # seconds
+  target_duration: 5.0        # seconds (preferred)
+  pause_threshold: 0.3        # seconds
+  merge_short_segments: true
+  
+normalization:
+  target_loudness: -23.0      # LUFS (broadcast standard)
+  sample_rate: 16000          # Hz
+  mono: true
+  
+output:
+  format: "wav"
+  bit_depth: 16
+  export_rejected: false      # Save rejected segments for review
+  generate_report: true       # Create quality statistics
+```
+
+### Enhanced Pipeline Usage
+
+```python
+from src.data.enhanced_processor import EnhancedAudioProcessor
+
+# Initialize with configuration
+processor = EnhancedAudioProcessor(
+    config_path="config/processing_config.yaml"
+)
+
+# Process single file
+results = processor.process_file(
+    input_path="data/raw/interview.mp3",
+    output_dir="data/processed/"
+)
+
+# Process directory (batch)
+stats = processor.process_directory(
+    input_dir="data/raw/realtalk-ep17/",
+    output_dir="data/processed/"
+)
+
+# Output structure:
+# data/processed/
+# ├── speaker_0/
+# │   ├── interview_seg001.wav
+# │   ├── interview_seg002.wav
+# │   └── ...
+# ├── speaker_1/
+# │   └── ...
+# └── quality_report.json
+```
+
+### Quality Metrics & Reporting
+
+The pipeline generates comprehensive statistics:
+
+```json
+{
+  "input_file": "interview.mp3",
+  "total_duration": 3600.0,
+  "speakers_detected": 3,
+  "segments_generated": 1847,
+  "segments_rejected": 423,
+  "quality_stats": {
+    "avg_snr": 18.5,
+    "avg_duration": 4.2,
+    "clipping_rate": 0.003,
+    "usable_audio_duration": 2891.4
+  },
+  "speaker_distribution": {
+    "speaker_0": 892,
+    "speaker_1": 654,
+    "speaker_2": 301
+  },
+  "rejection_reasons": {
+    "low_snr": 187,
+    "clipping": 45,
+    "too_short": 98,
+    "too_long": 23,
+    "low_energy": 70
+  }
+}
+```
+
+### Performance Characteristics
+
+**Processing Time** (12 hours of raw audio):
+- Diarization: 2-3 hours (GPU) or 6-8 hours (CPU)
+- VAD + Quality: 1-2 hours
+- Total: 3-10 hours depending on hardware
+
+**Expected Yield** (from 12 hours raw):
+- After VAD: 8-10 hours (removing silence/music)
+- After quality filter: 6-8 hours (removing poor segments)
+- Final segments: 1000-2000 per speaker (3-8s each)
+- Quality improvement: 85-95% vs 60-70% with basic processing
+
+**Resource Requirements**:
+- Memory: 4-8GB RAM recommended
+- Storage: 2-3x raw audio size (raw + processed + rejected)
+- GPU: Optional but speeds up diarization 3-4x
+
+### Quality Validation Standards
+
+#### Automatic Rejection Criteria
+- **SNR < 15 dB**: Too noisy for clear speech
+- **Clipping > 1%**: Distorted audio
+- **Duration < 1s or > 10s**: Outside optimal range
+- **Frequency anomalies**: Missing speech spectrum
+- **Low energy variance**: Monotone or silent
+
+#### Manual Review Flags
+- Overlapping speech detected
+- Music/background noise present
+- Unusual prosody patterns
+- Accent inconsistencies
+
+### Multi-Speaker Processing
+
+The pipeline automatically:
+1. Identifies all speakers in audio
+2. Separates into individual tracks
+3. Processes each speaker independently
+4. Organizes output by speaker ID
+5. Generates per-speaker quality reports
+
+**Speaker Selection Strategies**:
+- Use all speakers for diverse training data
+- Select primary speaker (most segments)
+- Filter by quality score threshold
 
 ## 🤖 TTS Engine Standards
 

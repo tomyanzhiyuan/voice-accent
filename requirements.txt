@@ -29,6 +29,22 @@ tortoise-tts>=3.0.0,<4.0.0
 openai-whisper>=20231117,<20250101
 
 # ============================================================================
+# ENHANCED AUDIO PROCESSING PIPELINE
+# ============================================================================
+
+# Speaker diarization (requires Hugging Face authentication)
+pyannote.audio>=3.1.0,<4.0.0
+
+# Voice activity detection
+silero-vad>=4.0.0,<5.0.0
+
+# Noise reduction
+noisereduce>=3.0.0,<4.0.0
+
+# Audio feature extraction
+python-speech-features>=0.6,<1.0.0
+
+# ============================================================================
 # AUDIO PROCESSING AND ANALYSIS
 # ============================================================================
 

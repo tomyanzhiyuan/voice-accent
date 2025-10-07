@@ -1,0 +1,238 @@
+# Enhanced Audio Processing Configuration
+# Configuration for the production-grade audio preprocessing pipeline
+
+# ============================================================================
+# SPEAKER DIARIZATION
+# ============================================================================
+# Identifies and separates individual speakers using pyannote.audio
+# Requires Hugging Face authentication token
+
+diarization:
+  enabled: true
+  min_speakers: 1              # Minimum number of speakers to detect
+  max_speakers: 10             # Maximum number of speakers to detect
+  min_segment_duration: 1.0    # Minimum duration (seconds) for speaker segments
+  
+  # Advanced settings
+  clustering:
+    method: "centroid"         # Clustering method: "centroid" or "affinity"
+    threshold: 0.5             # Similarity threshold for speaker clustering
+  
+  overlapping_speech:
+    handle: true               # Process overlapping speech segments
+    strategy: "keep_primary"   # "keep_primary", "keep_both", or "discard"
+
+# ============================================================================
+# VOICE ACTIVITY DETECTION (VAD)
+# ============================================================================
+# Detects speech vs non-speech using silero-vad
+# Removes silence, music, and background noise
+
+vad:
+  enabled: true
+  threshold: 0.5               # Confidence threshold (0.0-1.0)
+                               # Higher = more aggressive (may cut speech)
+                               # Lower = more permissive (may keep noise)
+  
+  min_speech_duration: 0.5     # Minimum speech segment duration (seconds)
+  min_silence_duration: 0.3    # Minimum silence duration to split (seconds)
+  
+  # Padding around speech segments
+  speech_pad_ms: 30            # Padding before/after speech (milliseconds)
+  
+  # Advanced settings
+  window_size_samples: 512     # VAD window size (samples at 16kHz)
+  return_seconds: true         # Return timestamps in seconds vs samples
+
+# ============================================================================
+# NOISE REDUCTION
+# ============================================================================
+# Reduces background noise while preserving speech quality
+
+noise_reduction:
+  enabled: true
+  stationary: true             # Assume stationary noise (constant background)
+  prop_decrease: 0.8           # Noise reduction strength (0.0-1.0)
+                               # 0.8 = 80% noise reduction
+                               # Higher values may degrade speech
+  
+  # Frequency-based filtering
+  freq_mask_smooth_hz: 500     # Smoothing for frequency mask (Hz)
+  time_mask_smooth_ms: 50      # Smoothing for time mask (milliseconds)
+  
+  # Advanced settings
+  n_fft: 2048                  # FFT size for spectral analysis
+  hop_length: 512              # Hop length for STFT
+  use_torch: false             # Use PyTorch for GPU acceleration
+
+# ============================================================================
+# QUALITY FILTERING
+# ============================================================================
+# Filters segments based on quality metrics
+# Rejects poor quality audio automatically
+
+quality_filter:
+  # Signal-to-Noise Ratio (SNR)
+  min_snr: 15.0                # Minimum SNR in dB
+                               # 15 dB = good quality
+                               # 12-13 dB = acceptable for noisy environments
+                               # <10 dB = poor quality
+  
+  # Clipping detection
+  max_clipping_ratio: 0.01     # Maximum clipping ratio (0.01 = 1%)
+  clipping_threshold: 0.99     # Amplitude threshold for clipping detection
+  
+  # Frequency analysis
+  min_frequency: 80            # Minimum frequency for speech (Hz)
+  max_frequency: 8000          # Maximum frequency for speech (Hz)
+  check_spectral_centroid: true
+  min_spectral_centroid: 200   # Minimum spectral centroid (Hz)
+  max_spectral_centroid: 4000  # Maximum spectral centroid (Hz)
+  
+  # Energy analysis
+  min_energy_variance: 0.1     # Minimum energy variance (reject flat audio)
+  min_rms_energy: 0.01         # Minimum RMS energy level
+  
+  # Duration constraints
+  min_duration: 1.0            # Minimum segment duration (seconds)
+  max_duration: 10.0           # Maximum segment duration (seconds)
+
+# ============================================================================
+# SMART SEGMENTATION
+# ============================================================================
+# Segments audio on natural pauses, not fixed durations
+# Preserves prosodic units and avoids mid-word cuts
+
+segmentation:
+  # Duration targets
+  min_duration: 1.0            # Minimum segment duration (seconds)
+  max_duration: 10.0           # Maximum segment duration (seconds)
+  target_duration: 5.0         # Preferred segment duration (seconds)
+  
+  # Pause detection
+  pause_threshold: 0.3         # Minimum pause duration to split (seconds)
+  min_pause_duration: 0.2      # Minimum pause to consider (seconds)
+  
+  # Segment merging
+  merge_short_segments: true   # Merge segments shorter than min_duration
+  max_merge_duration: 8.0      # Maximum duration when merging (seconds)
+  
+  # Advanced settings
+  use_vad_for_pauses: true     # Use VAD output for pause detection
+  preserve_prosody: true       # Avoid splitting within prosodic units
+  split_on_silence_only: false # Only split on silence (not pauses)
+
+# ============================================================================
+# NORMALIZATION
+# ============================================================================
+# Normalizes audio to consistent volume and format
+
+normalization:
+  # Loudness normalization
+  target_loudness: -23.0       # Target loudness in LUFS
+                               # -23 LUFS = broadcast standard
+                               # -16 LUFS = streaming standard
+  
+  # Audio format
+  sample_rate: 16000           # Target sample rate (Hz)
+  mono: true                   # Convert to mono
+  bit_depth: 16                # Bit depth for output files
+  
+  # Peak normalization (applied after loudness)
+  apply_peak_normalization: false
+  peak_target: -1.0            # Peak level in dB (if enabled)
+  
+  # Advanced settings
+  remove_dc_offset: true       # Remove DC offset from audio
+  apply_fade: true             # Apply fade in/out
+  fade_duration_ms: 10         # Fade duration (milliseconds)
+
+# ============================================================================
+# OUTPUT SETTINGS
+# ============================================================================
+# Controls output format and organization
+
+output:
+  # File format
+  format: "wav"                # Output format: "wav", "flac", "mp3"
+  bit_depth: 16                # Bit depth: 16 or 24
+  
+  # Organization
+  organize_by_speaker: true    # Create speaker_N subdirectories
+  speaker_prefix: "speaker"    # Prefix for speaker directories
+  
+  # Segment naming
+  segment_prefix: "seg"        # Prefix for segment files
+  zero_pad_length: 4           # Zero padding for segment numbers (0001, 0002, etc.)
+  include_timestamp: false     # Include timestamp in filename
+  
+  # Quality control
+  export_rejected: false       # Save rejected segments to separate directory
+  rejected_dir: "rejected"     # Directory name for rejected segments
+  
+  # Reporting
+  generate_report: true        # Generate quality statistics report
+  report_format: "json"        # Report format: "json", "yaml", "html"
+  report_filename: "quality_report"
+  
+  # Metadata
+  save_metadata: true          # Save processing metadata with segments
+  metadata_format: "json"      # Metadata format: "json" or "yaml"
+
+# ============================================================================
+# PERFORMANCE SETTINGS
+# ============================================================================
+# Controls processing performance and resource usage
+
+performance:
+  # Parallel processing
+  use_multiprocessing: true    # Enable parallel processing
+  num_workers: 4               # Number of worker processes (0 = auto)
+  
+  # Memory management
+  max_audio_length: 3600       # Maximum audio length to process (seconds)
+  chunk_size: 300              # Process audio in chunks (seconds)
+  
+  # GPU acceleration
+  use_gpu: true                # Use GPU if available
+  gpu_device: 0                # GPU device ID
+  
+  # Caching
+  cache_intermediate: false    # Cache intermediate results
+  cache_dir: ".cache"          # Cache directory
+
+# ============================================================================
+# LOGGING SETTINGS
+# ============================================================================
+# Controls logging verbosity and output
+
+logging:
+  level: "INFO"                # Log level: DEBUG, INFO, WARNING, ERROR
+  log_to_file: true            # Save logs to file
+  log_file: "logs/processing.log"
+  log_format: "detailed"       # Format: "simple", "detailed", "json"
+  
+  # Progress reporting
+  show_progress: true          # Show progress bars
+  progress_update_interval: 1  # Update interval (seconds)
+
+# ============================================================================
+# ADVANCED SETTINGS
+# ============================================================================
+# Advanced configuration for fine-tuning
+
+advanced:
+  # Audio preprocessing
+  apply_preemphasis: false     # Apply pre-emphasis filter
+  preemphasis_coef: 0.97       # Pre-emphasis coefficient
+  
+  # Quality thresholds (override defaults)
+  strict_mode: false           # Enable strict quality filtering
+  
+  # Experimental features
+  use_ml_vad: false            # Use ML-based VAD (experimental)
+  use_adaptive_threshold: false # Adaptive quality thresholds
+  
+  # Debug options
+  save_intermediate_files: false # Save intermediate processing steps
+  intermediate_dir: "debug"    # Directory for intermediate files
